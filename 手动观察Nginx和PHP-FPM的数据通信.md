@@ -80,10 +80,8 @@ strace: Process 93164 attached
 
 Nginx 调用如下：  
 
-<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/Nginx通信.png" width="800"></div>  
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/Nginx通信.png" width="1000"></div>  
 
 FPM 调用如下：  
 
-<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/FPM通信.png" width="800"></div>  
-
-  
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/FPM通信.png" width="1000"></div>  
