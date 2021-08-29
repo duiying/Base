@@ -244,13 +244,22 @@ strace -f -s 65535 -o go_strace.log go run hello.go
 strace -f -s 65535 -o python3_strace.log python3 hello.py
 ```
 
+Go 的系统调用如下：  
+
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/Go系统调用.png" width="600"></div>  
+
+Python 的系统调用如下：  
+
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/Python系统调用_1.png" width="600"></div>  
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/Python系统调用_2.png" width="600"></div>  
+
 ### PHP 解释器的执行过程是怎样的？
 
 `php hello.php` 执行过程如下：  
 
 <div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/PHP解释器.png" width="600"></div>  
 
-> 看完上面的演示，我相信大家应该有一个认识，虽然语言写法不同，但是它们的系统调用都是一样的，大家应该往深的方向看，不要局限于表面的编程语言，脚本语言。
+**看完上面的演示，我相信大家应该有一个认识，虽然语言有 PHP、Go、Python 等等，但是语言使用到的的 Linux 底层库函数都是一样的，不要局限于表面的语言。**    
 
 ### 总结
 
