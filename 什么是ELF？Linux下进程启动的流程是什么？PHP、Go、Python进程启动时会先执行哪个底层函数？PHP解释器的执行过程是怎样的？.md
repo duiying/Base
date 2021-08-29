@@ -2,24 +2,9 @@
 
 ### 环境准备
 
-1、安装 PHP  
+1、[PHP 安装](https://github.com/duiying/OPS/tree/master/nginx-php-source-install)  
 
-2、安装 Go  
-
-```sh
-# 下载 & 解压
-wget https://studygolang.com/dl/golang/go1.17.linux-amd64.tar.gz
-tar -xvf go1.17.linux-amd64.tar.gz -C /home/work/service
-
-# vim /etc/profile
-export GOROOT=/home/work/service/go
-export GOPATH=/home/work/gopath
-export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
-source /etc/profile
-
-# 创建目录
-mkdir -p /home/work/gopath
-```
+2、[Go 安装](https://github.com/duiying/OPS/tree/master/go-install)  
 
 3、Python3 系统自带，无需安装  
 
