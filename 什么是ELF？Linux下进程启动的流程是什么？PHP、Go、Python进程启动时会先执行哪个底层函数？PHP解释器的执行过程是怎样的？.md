@@ -246,12 +246,12 @@ strace -f -s 65535 -o python3_strace.log python3 hello.py
 
 Go 的系统调用如下：  
 
-<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/Go系统调用.png" width="600"></div>  
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/Go系统调用.png" width="800"></div>  
 
 Python 的系统调用如下：  
 
-<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/Python系统调用_1.png" width="600"></div>  
-<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/Python系统调用_2.png" width="600"></div>  
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/Python系统调用_1.png" width="800"></div>  
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/Python系统调用_2.png" width="800"></div>  
 
 ### PHP 解释器的执行过程是怎样的？
 
