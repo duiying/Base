@@ -78,6 +78,19 @@ python3: /usr/bin/python3 /usr/bin/python3.6 /usr/bin/python3.6m /usr/lib/python
 
 可以看出它们都是 ELF 文件。  
 
+我们也可以看下源码文件的类型：  
+
+```sh
+[work@localhost hello]$ file hello.php
+hello.php: PHP script, ASCII text
+[work@localhost hello]$ file hello.go
+hello.go: C source, ASCII text
+[work@localhost hello]$ file hello.py
+hello.py: ASCII text
+```
+
+可以看出，**源码文件只是普通的文本文件**。  
+
 我们可以用 `ldd` 命令查看 PHP、Go、Python3 依赖的库。  
 
 ```sh
@@ -222,7 +235,7 @@ execve() 是执行程序函数，我们可以用 `man` 命令查看 execve 函�
 execve() executes the program pointed to by filename.
 ```
 
-原来是根据文件 filename 执行文件，并且把 argv 当做参数传递给它，这样我们就知道原来执行 php、go、python3 命令时，它们会通过 execve 这个去加载我们写的代码。  
+原来是根据文件 filename 执行文件，并且把 argv 当做参数传递给它，这样我们就知道原来执行 php、go、python3 命令时，它们会通过 execve 这个函数去加载执行我们写的代码。  
 
 Go、Python3 同理，它们也加载了 libc 库，并在入口调用了 execve 函数，可以通过 strace 日志看到：  
 
@@ -231,13 +244,22 @@ strace -f -s 65535 -o go_strace.log go run hello.go
 strace -f -s 65535 -o python3_strace.log python3 hello.py
 ```
 
+### PHP 解释器的执行过程是怎样的？
 
+`php hello.php` 执行过程如下：  
+
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/PHP解释器.png" width="400"></div>  
+
+> 看完上面的演示，我相信大家应该有一个认识，虽然语言写法不同，但是它们的系统调用都是一样的，大家应该往深的方向看，不要局限于表面的编程语言，脚本语言。
 
 ### 总结
 
-- **什么是 ELF？它有哪些类型的文件？**
+- **什么是 ELF？它有哪些类型的文件？**（ELF 是Linux 下的主要可执行文件格式，分为三种：可执行文件、可重定位文件、共享目标文件。）
 - **用什么命令查看文件类型？**（file）
 - **用什么命令查看程序依赖的库？**（ldd）
 - **各个语言通用的库有哪些？**（libc、ld-linux 等）
 - **怎么查看 ELF 文件的信息？**（readelf）
 - **怎么查看动态库提供了哪些函数？**（nm）
+- **PHP 解释器的工作流程是怎样的？Linux 下启动进程的过程是什么？**（调用内核 execve 函数，将文件名传给 PHP 解释器，PHP 解释器读取并执行该文件，进程退出）
+- **PHP、Go、Python 程序启动时先运行哪个底层函数？**（execve）
+- **hello.php 是 ELF 文件还是 ASCII text 文件？**（ASCII text 文件）
