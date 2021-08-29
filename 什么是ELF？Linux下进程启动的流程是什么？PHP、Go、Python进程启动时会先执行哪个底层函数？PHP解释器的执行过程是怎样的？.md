@@ -248,7 +248,7 @@ strace -f -s 65535 -o python3_strace.log python3 hello.py
 
 `php hello.php` 执行过程如下：  
 
-<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/PHP解释器.png" width="400"></div>  
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/PHP解释器.png" width="600"></div>  
 
 > 看完上面的演示，我相信大家应该有一个认识，虽然语言写法不同，但是它们的系统调用都是一样的，大家应该往深的方向看，不要局限于表面的编程语言，脚本语言。
 
