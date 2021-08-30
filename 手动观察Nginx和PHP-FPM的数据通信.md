@@ -85,3 +85,11 @@ Nginx 调用如下：
 FPM 调用如下：  
 
 <div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/FPM通信.png" width="1000"></div>  
+
+### 总结
+
+- **Nginx 是如何将客户端 HTTP 请求转发给 FPM 进程的？**（1、Nginx 调用 connect 函数连接 FPM；2、Nginx 根据 FastCGI 协议将请求转发给 FPM；3、接收 FPM 返回的数据；）
+- **Nginx 连接 FPM 消耗了多少时间？Nginx 转发给 FPM 消耗了多少时间？**（学会查看系统调用耗时 0.000083s、0.000168s）
+- **Nginx 接收到的 HTTP 请求报文字节数？Nginx 转发给 FPM 的字节数？Nginx 返回给客户端的 HTTP 响应报文字节数？FPM 返回给 Nginx 的字节数？**（学会查看系统调用传输的字节数 160、640、214、112）
+- **从 HTTP 客户端发起请求到收到 HTTP 响应，底层都调用了哪些函数？每个函数耗时多久？**（通过 strace 命令查看 Nginx、FPM 的 Worker 进程的系统调用）
+- **100w 个请求时，Nginx 传输多少数据量？应该购买多大的宽带？**（用 Nginx 返回给客户端的响应报文字节数乘以请求数）
