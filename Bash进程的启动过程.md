@@ -86,3 +86,5 @@ systemd,1 --switched-root --system --deserialize 22
 然后执行 execve 函数。  
 
 <div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/ssh_strace_6.png" width="1000"></div>  
+
+**由此可见，在当前 Bash 中执行的所有命令，都是该 Bash 进程的子进程，而该 Bash 进程，又是 sshd 的子进程。**
