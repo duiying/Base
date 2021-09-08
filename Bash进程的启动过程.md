@@ -63,8 +63,18 @@ systemd,1 --switched-root --system --deserialize 22
 
 <div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/ssh_strace_0.png" width="1000"></div>  
 
-当接收到连接时，通过 fork/clone 出一个子进程，pid=73906，该子进程执行：  
+当接收到连接请求时，通过 fork/clone 出一个子进程，pid=73906，该子进程调用 execve 函数：  
 
 <div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/ssh_strace_1.png" width="1000"></div>  
 
-2、
+2、当输入密码，登录上系统时。  
+
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/ssh_strace_2.png" width="1000"></div>  
+
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/ssh_strace_3.png" width="1000"></div>  
+
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/ssh_strace_4.png" width="1000"></div>  
+
+创建了一个 ssd 的子进程，pid=73911，一个 Bash 进程，pid=73914。  
+
+3、
