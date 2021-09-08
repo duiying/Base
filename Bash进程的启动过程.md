@@ -62,3 +62,9 @@ systemd,1 --switched-root --system --deserialize 22
 1、首先系统中有一个 pid=1055 的 sshd 进程，这个进程通过 select IO 多路复用 accept 客户端的连接。  
 
 <div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/ssh_strace_0.png" width="1000"></div>  
+
+当接收到连接时，通过 fork/clone 出一个子进程，pid=73906，该子进程执行：  
+
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/ssh_strace_1.png" width="1000"></div>  
+
+2、
