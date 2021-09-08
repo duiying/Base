@@ -77,4 +77,12 @@ systemd,1 --switched-root --system --deserialize 22
 
 创建了一个 ssd 的子进程，pid=73911，一个 Bash 进程，pid=73914。  
 
-3、
+3、我们在会话 2 当前 Bash 执行 `ls` 命令后，系统调用如下：  
+
+在当前 Bash 进程 fork/clone 出一个子进程，pid=77126，自己是一个进程组。  
+
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/ssh_strace_5.png" width="1000"></div>  
+
+然后执行 execve 函数。  
+
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/ssh_strace_6.png" width="1000"></div>  
