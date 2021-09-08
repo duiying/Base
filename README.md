@@ -10,3 +10,4 @@ Linux 命令手册：[Linux 命令手册](http://linux.51yip.com/)。
 - [什么是 ELF？Linux 下进程启动的流程是什么？PHP、Go、Python 进程启动时会先执行哪个底层函数？PHP 解释器的执行过程是怎样的？](什么是ELF？Linux下进程启动的流程是什么？PHP、Go、Python进程启动时会先执行哪个底层函数？PHP解释器的执行过程是怎样的？.md)
 - [手动观察 Nginx 和 PHP-FPM 的数据通信](手动观察Nginx和PHP-FPM的数据通信.md)
 - [解释器和解释器文件](解释器和解释器文件.md)
+- [Bash 进程的启动过程](Bash进程的启动过程.md)
