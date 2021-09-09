@@ -11,3 +11,4 @@ Linux 命令手册：[Linux 命令手册](http://linux.51yip.com/)。
 - [手动观察 Nginx 和 PHP-FPM 的数据通信](手动观察Nginx和PHP-FPM的数据通信.md)
 - [解释器和解释器文件](解释器和解释器文件.md)
 - [Bash 进程的启动过程](Bash进程的启动过程.md)
+- [PHP 多进程编程基础](PHP多进程编程基础.md)
