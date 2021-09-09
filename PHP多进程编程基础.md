@@ -192,7 +192,123 @@ PID：85341
 work      85341  0.0  0.0      0     0 pts/2    Z+   15:58   0:00 [php] <defunct>
 ```
 
-此时，`/proc/85341` 下还有文件，表示该进程还有部分信息没有被释放，如果我们此时停掉父进程，此时子进程被 init 进程接管，释放占用的资源，`/proc/85341` 目录下变成空了。
+此时，`/proc/85341` 下还有文件，表示该进程还有部分信息没有被释放，如果我们此时停掉父进程，此时子进程被 init 进程接管，释放占用的资源，`/proc/85341` 目录下变成空了。  
+
+**所以，我们在进行多进程编程的时候，一定要用 wait 来回收退出的子进程。**  
+
+### 进程的退出
+
+PHP 进程启动后，在以下情况会退出：  
+
+- 运行到最后一行语句
+- 运行时遇到 return 时
+- 运行时遇到 exit() 函数的时候
+- 程序异常的时候
+- 进程接收到中断信号
+
+无论进程怎么退出，它都有一个终止状态码，进程结束不会释放所有资源，父进程可以通过 wait 相关函数来获取进程的终止状态码同时释放子进程占用的资源，防止产生僵尸进程。  
+
+```php
+<?php
+
+$pid = pcntl_fork();
+
+if ($pid === -1) {
+    echo 'fork 失败' . PHP_EOL;
+    exit;
+} elseif ($pid === 0) {
+    echo sprintf('子进程执行，ID：%d，父进程 ID：%d' . PHP_EOL, posix_getpid(), posix_getppid());
+    // 一般 0 表示成功 -1 表示失败，最大为 255
+    exit(8);
+} else {
+    echo sprintf('父进程执行，ID：%d' . PHP_EOL, posix_getpid());
+    pcntl_wait($status);
+    echo '子进程退出了，终止状态码：' . pcntl_wexitstatus($status) . PHP_EOL;
+}
+```
+
+执行结果如下：  
+
+```sh
+[work@localhost www]$ php test.php
+父进程执行，ID：85696
+子进程执行，ID：85697，父进程 ID：85696
+子进程退出了，终止状态码：8
+```
+
+**如何让 wait 非阻塞立即返回？**  
+
+```php
+<?php
+
+$pid = pcntl_fork();
+
+if ($pid === -1) {
+    echo 'fork 失败' . PHP_EOL;
+    exit;
+} elseif ($pid === 0) {
+    echo sprintf('子进程执行，ID：%d，父进程 ID：%d' . PHP_EOL, posix_getpid(), posix_getppid());
+} else {
+    echo sprintf('父进程执行，ID：%d' . PHP_EOL, posix_getpid());
+    pcntl_wait($status, WUNTRACED);
+    echo sprintf('父进程没有阻塞，ID：%d' . PHP_EOL, posix_getpid());
+    sleep(30);
+}
+```
+
+如何让 wait 非阻塞？  
+
+```php
+pcntl_wait($status, WNOHANG | WUNTRACED);
+```
+
+**如何判断子进程的退出方式？**  
+
+```php
+<?php
+
+$pid = pcntl_fork();
+
+if ($pid === -1) {
+    echo 'fork 失败' . PHP_EOL;
+    exit;
+} elseif ($pid === 0) {
+    echo sprintf('子进程执行，ID：%d，父进程 ID：%d' . PHP_EOL, posix_getpid(), posix_getppid());
+    sleep(60);
+} else {
+    while (1) {
+        echo sprintf('父进程执行，ID：%d' . PHP_EOL, posix_getpid());
+
+        $pid = pcntl_wait($status, WNOHANG | WUNTRACED);
+
+        if ($pid > 0) {
+            // 正常退出
+            if (pcntl_wifexited($status)) {
+                echo sprintf('子进程正常退出，status：%d' . PHP_EOL, pcntl_wexitstatus($status));
+                break;
+            }
+            // 中断退出
+            else if (pcntl_wifsignaled($status)){
+                echo sprintf('子进程中断退出 1，status：%d' . PHP_EOL, pcntl_wtermsig($status));
+                break;
+            }
+            // 一般是发送 SIGSTOP SIGTSTP 让进程停止
+            else if (pcntl_wifstopped($status)) {
+                echo sprintf('子进程中断退出 2，status：%d' . PHP_EOL, pcntl_wstopsig($status));
+                break;
+            }
+        }
+
+        sleep(3);
+    }
+}
+```
+
+- 如果程序正常执行完成，会打印：子进程正常退出，status：0
+- 如果 `kill -SIGUSR1 子进程 PID`，会打印：子进程中断退出 1，status：10
+- 如果 `kill -SIGSTOP 子进程 PID`，会打印：子进程中断退出 2，status：19
+
+**我们可以用 `kill -l` 查看 kill 支持的信号。**  
 
 ### 总结
 
@@ -201,4 +317,6 @@ work      85341  0.0  0.0      0     0 pts/2    Z+   15:58   0:00 [php] <defunct
 - **常见的进程状态都有哪些？**
 - **什么是孤儿进程？孤儿进程的危害？**
 - **什么是僵尸进程？僵尸进程的危害？**
+- **如何让 wait 非阻塞立即返回？**
+- **如何判断子进程的退出方式？**
 
