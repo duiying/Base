@@ -310,7 +310,89 @@ if ($pid === -1) {
 
 **我们可以用 `kill -l` 查看 kill 支持的信号。**（kill 命令的作用是发送指定的信号到相应进程）
 
-### pcntl_exec - 在当前进程空间执行指定程序
+### 使用 pcntl_exec 在当前进程空间执行指定程序
+
+准备两个 PHP 文件，`father.php` 和 `son.php`：  
+
+`father.php`：  
+
+```php
+<?php
+
+function printIdInfo($text = '')
+{
+    echo "$text begin" . PHP_EOL;
+    echo sprintf('pid = %d' . PHP_EOL, posix_getpid());                 // 进程 ID
+    echo sprintf('ppid = %d' . PHP_EOL, posix_getppid());               // 父进程 ID
+    echo sprintf('gid = %d' . PHP_EOL, posix_getgid());                 // 进程组 ID
+    echo sprintf('uid = %d' . PHP_EOL, posix_getuid());                 // 进程实际用户 ID
+    echo sprintf('sid = %d' . PHP_EOL, posix_getsid(posix_getpid()));   // 会话 ID
+    echo "$text end" . PHP_EOL;
+}
+printIdInfo('父进程');
+$pid = pcntl_fork();
+if ($pid === 0) {
+    pcntl_exec('/home/work/service/php74/bin/php', ['/home/work/www/son.php', 'a', 'b', 'c']);
+
+    // 下面这行不会执行
+    echo 'hello' . PHP_EOL;
+}
+$pid = pcntl_wait($status);
+if ($pid > 0) {
+    echo "子进程 pid：$pid 退出了" . PHP_EOL;
+}
+```
+
+`son.php`：
+
+```php
+<?php
+
+function printIdInfo($text = '')
+{
+    echo "$text begin" . PHP_EOL;
+    echo sprintf('pid = %d' . PHP_EOL, posix_getpid());                 // 进程 ID
+    echo sprintf('ppid = %d' . PHP_EOL, posix_getppid());               // 父进程 ID
+    echo sprintf('gid = %d' . PHP_EOL, posix_getgid());                 // 进程组 ID
+    echo sprintf('uid = %d' . PHP_EOL, posix_getuid());                 // 进程实际用户 ID
+    echo sprintf('sid = %d' . PHP_EOL, posix_getsid(posix_getpid()));   // 会话 ID
+    echo "$text end" . PHP_EOL;
+}
+
+printIdInfo('子进程');
+print_r($argv);
+```
+
+执行 `strace -f -s 65535 -o exec.log php father.php`，打印结果：  
+
+```sh
+父进程 begin
+pid = 108554
+ppid = 108552
+gid = 1000
+uid = 1000
+sid = 104321
+父进程 end
+子进程 begin
+pid = 108555
+ppid = 108554
+gid = 1000
+uid = 1000
+sid = 104321
+子进程 end
+Array
+(
+    [0] => /home/work/www/son.php
+    [1] => a
+    [2] => b
+    [3] => c
+)
+子进程 pid：108555 退出了
+```
+
+查看系统调用日志，可以看到底层先是调用了 clone 创建了一个子进程，然后调用 execve 将参数传给了 PHP 解释器。  
+
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/pcntl_exec.png" width="1000"></div>
 
 ### 总结
 
@@ -321,4 +403,5 @@ if ($pid === -1) {
 - **什么是僵尸进程？僵尸进程的危害？**
 - **如何让 wait 非阻塞立即返回？**
 - **如何判断子进程的退出方式？**
+- **pcntl_exec 的作用是什么？它底层调用了哪个函数？**（作用是在当前进程空间执行指定程序，底层调用了 clone 和 exec 函数）
 
