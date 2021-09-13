@@ -2,7 +2,7 @@
     Base
 </h1>
 
-<p align="center">CS 基础实践，主要包括网络协议和操作系统相关知识</p>  
+<p align="center">CS 基础实践，主要包括网络协议和 Linux 操作系统相关知识</p>  
 
 Linux 命令手册：[Linux 命令手册](http://linux.51yip.com/)。  
 
