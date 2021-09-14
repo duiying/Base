@@ -8,6 +8,8 @@ SUID 的概念比较晦涩难懂，举个例子就明白了，以常用的 passw
 
 <div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/suid.png" width="1000"></div>  
 
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/passwd_suid.png" width="1000"></div>
+
 **如何给进程提权、降权？**  
 
 我们用 root 用户建一个文件：  
@@ -72,7 +74,6 @@ echo sprintf('降权后：uid %d euid %d' . PHP_EOL, posix_getuid(), posix_geteu
 降权后：uid 1000 euid 1000
 降权后没有写权限
 ```
-
 
 
 
