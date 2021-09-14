@@ -1,37 +1,29 @@
 <?php
 
-$pid = pcntl_fork();
+$file = '/home/work/www/suid.txt';
+$uid = posix_getuid();
+$euid = posix_geteuid();
 
-if ($pid === -1) {
-    echo 'fork 失败' . PHP_EOL;
-    exit;
-} elseif ($pid === 0) {
-    echo sprintf('子进程执行，ID：%d，父进程 ID：%d' . PHP_EOL, posix_getpid(), posix_getppid());
-    sleep(60);
+echo sprintf('提权前：uid %d euid %d' . PHP_EOL, $uid, $euid);
+
+// 提权
+posix_setuid($euid);
+
+echo sprintf('提权后：uid %d euid %d' . PHP_EOL, posix_getuid(), posix_geteuid());
+
+if (posix_access($file,POSIX_W_OK)) {
+    file_put_contents($file, 'suid');
 } else {
-    while (1) {
-        echo sprintf('父进程执行，ID：%d' . PHP_EOL, posix_getpid());
+    echo '没有写权限' . PHP_EOL;
+}
 
-        $pid = pcntl_wait($status, WNOHANG | WUNTRACED);
+// 在做完特权操作后，一定要对该进程进行降权操作以保证系统安全
+posix_setuid($uid);
 
-        if ($pid > 0) {
-            // 正常退出
-            if (pcntl_wifexited($status)) {
-                echo sprintf('子进程正常退出，status：%d' . PHP_EOL, pcntl_wexitstatus($status));
-                break;
-            }
-            // 中断退出
-            else if (pcntl_wifsignaled($status)){
-                echo sprintf('子进程中断退出 1，status：%d' . PHP_EOL, pcntl_wtermsig($status));
-                break;
-            }
-            // 一般是发送 SIGSTOP SIGTSTP 让进程停止
-            else if (pcntl_wifstopped($status)) {
-                echo sprintf('子进程中断退出 2，status：%d' . PHP_EOL, pcntl_wstopsig($status));
-                break;
-            }
-        }
+echo sprintf('降权后：uid %d euid %d' . PHP_EOL, posix_getuid(), posix_geteuid());
 
-        sleep(3);
-    }
+if (posix_access($file,POSIX_W_OK)) {
+    file_put_contents($file, 'suid');
+} else {
+    echo '降权后没有写权限' . PHP_EOL;
 }

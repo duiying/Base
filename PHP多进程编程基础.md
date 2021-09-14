@@ -392,7 +392,81 @@ Array
 
 查看系统调用日志，可以看到底层先是调用了 clone 创建了一个子进程，然后调用 execve 将参数传给了 PHP 解释器。  
 
-<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/pcntl_exec.png" width="1000"></div>
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/pcntl_exec.png" width="1000"></div>  
+
+### 手动修改进程的优先级
+
+使用 `pcntl_setpriority` 函数。  
+
+priority 通常为 -20 至 20 这个范围内的值。默认优先级是 0，值越小代表优先级越高，比如我们控制子进程优先级比父进程优先级低，即子进程的 nice 值更大：  
+
+```php
+<?php
+
+$nice = $argv[1];
+$start = time();
+$i = 0;
+
+$pid = pcntl_fork();
+if ($pid === 0) {
+   echo sprintf('子进程执行 pid=%d' . PHP_EOL, posix_getpid());
+    pcntl_setpriority($nice, posix_getpid());
+} else {
+    echo sprintf('父进程执行 pid=%d' . PHP_EOL, posix_getpid());
+}
+
+echo sprintf('进程执行 pid=%d nice=%d' . PHP_EOL, posix_getpid(), pcntl_getpriority());
+```
+
+在 top 命令中的 NI 值即代表进程的优先级。
+
+### 下面代码会创建几个进程？每个进程的变量值是多少？请详细描述下面程序的执行过程？  
+
+```php
+<?php
+
+echo sprintf('当前进程 pid=%d' . PHP_EOL, posix_getpid());
+
+$count = 10;
+
+for ($i = 0; $i < 2; $i++) {
+    $pid = pcntl_fork();
+    if ($pid === 0) {
+        $count += 1;
+    } else {
+        $count *= 10;
+    }
+}
+
+echo sprintf('pid=%d count=%d' . PHP_EOL, posix_getpid(), $count);
+```
+
+执行结果如下：  
+
+```sh
+[work@localhost www]$ php test.php
+当前进程 pid=109700
+pid=109700 count=1000
+pid=109701 count=110
+pid=109703 count=12
+pid=109702 count=101
+```
+
+1、当前进程 pid=109700，我们称为进程 0，进程 0 fork 了一个子进程，称为进程 1，此时 `$i = 0; $count = 10`  
+
+2、CPU 继续执行进程 0，此时 `$i = 0; $count = 100`，然后 `$i++`，此时 `$i = 1; $count = 100`  
+
+3、CPU 继续执行进程 0，进程 0 fork 了一个子进程，称为进程 2，此时 `$i = 1; $count = 100`，进程 0 继续执行，此时 `$i = 1; $count = 1000`，然后 `$i++`，此时进程 0 退出循环  
+
+4、CPU 执行进程 2，`$count += 1`，此时 `$i = 1; $count = 101`，然后 `$i++`，此时进程 2 退出循环  
+
+5、CPU 执行进程 1，`$count += 1`，此时 `$i = 0; $count = 11`，然后 `$i++`，此时 `$i = 1; $count = 11`，然后执行下一次循环  
+
+6、进程 1 执行到了 `pcntl_fork`，进程 1 fork 出了一个子进程，称为进程 3，进程 1 继续执行 `$count *= 10`，此时进程 1 `$i = 1; $count = 110`，然后进程 1 `$i++`，退出了循环  
+
+7、进程 3 执行 `$count += 1`，此时进程 3 `$i = 1; $count = 12`，，然后进程 3 `$i++`，退出了循环  
+
+所以：一共存在 4 个进程，产生了 3 个新的进程，进程 1 和进程 2 是当前进程的子进程，进程 3 是进程 1 的子进程。  
 
 ### 总结
 
@@ -404,4 +478,5 @@ Array
 - **如何让 wait 非阻塞立即返回？**
 - **如何判断子进程的退出方式？**
 - **pcntl_exec 的作用是什么？它底层调用了哪个函数？**（作用是在当前进程空间执行指定程序，底层调用了 clone 和 exec 函数）
+- **在 top 命令中的 NI 值代表什么？**（进程的优先级，nice 值越大，进程调度的优先级越低）
 
