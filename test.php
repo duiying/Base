@@ -1,29 +1,23 @@
 <?php
 
-$file = '/home/work/www/suid.txt';
-$uid = posix_getuid();
-$euid = posix_geteuid();
+echo sprintf('进程启动了，pid：%d' . PHP_EOL, posix_getpid());
 
-echo sprintf('提权前：uid %d euid %d' . PHP_EOL, $uid, $euid);
+// 忽略 SIGINT 信号
+pcntl_signal(SIGINT, SIG_IGN);
 
-// 提权
-posix_setuid($euid);
+$pid = pcntl_fork();
 
-echo sprintf('提权后：uid %d euid %d' . PHP_EOL, posix_getuid(), posix_geteuid());
-
-if (posix_access($file,POSIX_W_OK)) {
-    file_put_contents($file, 'suid');
-} else {
-    echo '没有写权限' . PHP_EOL;
+if ($pid === 0) {
+    echo sprintf('子进程启动了，pid：%d' . PHP_EOL, posix_getpid());
+    // 子进程已经重设信号处理程序
+    pcntl_signal(SIGINT, function($signo) {
+        echo sprintf('子进程 pid：%d，我收到了一个信号：%d' . PHP_EOL, posix_getpid(), $signo);
+    });
 }
 
-// 在做完特权操作后，一定要对该进程进行降权操作以保证系统安全
-posix_setuid($uid);
+while (1) {
+    // 必须要有该方法
+    pcntl_signal_dispatch();
 
-echo sprintf('降权后：uid %d euid %d' . PHP_EOL, posix_getuid(), posix_geteuid());
-
-if (posix_access($file,POSIX_W_OK)) {
-    file_put_contents($file, 'suid');
-} else {
-    echo '降权后没有写权限' . PHP_EOL;
+    sleep(1);
 }

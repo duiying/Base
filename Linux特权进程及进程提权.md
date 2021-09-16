@@ -79,8 +79,3 @@ echo sprintf('降权后：uid %d euid %d' . PHP_EOL, posix_getuid(), posix_geteu
 
 - 如果对一个 ELF 格式的可执行文件设置了 SUID 位，那么其他用户可以通过提权进程获得 root 的身份运行相应进程，该进程便拥有了 root 的权限，但是需要注意的是，在做完特权操作后，一定要对该进程进行降权操作以保证系统安全。
 - SUID 的标志为：在会出现 x 的地方出现 s（-rwsr-xr-x）
-
-
-
-
-
