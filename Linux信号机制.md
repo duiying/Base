@@ -88,6 +88,8 @@ pid：5915
 [1]+  已停止               php test.php
 ```
 
+> jobs 命令：用来查看后台执行的任务列表
+
 ### 编写信号处理函数
 
 我下面启动了一个 PHP 进程，代码如下：  
@@ -207,6 +209,277 @@ while (1) {
 子进程 pid：6533，我收到了一个信号：2
 ```
 
+### 信号在内核中的表示
+
+上面讨论了信号产生的各种原因，而实际执行信号的处理动作称为信号递达（Delivery），信号从产生到递达之间的状态，称为信号未决（Pending）。  
+进程可以选择阻塞（Block）某个信号。被阻塞的信号产生时将保持在未决状态，直到进程解除对此信号的阻塞，才执行递达的动作。  
+注意，阻塞和忽略是不同的，只要信号被阻塞就不会递达，而忽略是在递达之后可选的一种处理动作。信号在内核中的表示可以看作是这样的：  
+
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/信号表示.png" width="600"></div>  
+
+每个信号都有两个标志位分别表示阻塞和未决，还有一个函数指针表示处理动作。信号产生时，内核在进程控制块中设置该信号的未决标志，直到信号递达才清除该标志。在上图的例子中：  
+
+1. SIGHUP 信号未阻塞也未产生过，当它递达时执行默认处理动作。
+2. SIGINT 信号产生过，但正在被阻塞，所以暂时不能递达。虽然它的处理动作是忽略，但在没有解除阻塞之前不能忽略这个信号，因为进程仍有机会改变处理动作之后再解除阻塞。
+3. SIGQUIT 信号未产生过，一旦产生 SIGQUIT 信号将被阻塞，它的处理动作是用户自定义函数 sighandler。  
+
+我们可以用 `pcntl_sigprocmask` 函数设置或删除阻塞信号：  
+
+```php
+<?php
+
+echo sprintf('进程启动了，pid：%d' . PHP_EOL, posix_getpid());
+
+pcntl_signal(SIGINT, function($signo) {
+    echo sprintf('进程 pid：%d，我收到了一个信号：%d' . PHP_EOL, posix_getpid(), $signo);
+});
+
+// 设置进程的信号屏蔽字｜信号阻塞集
+$sigset = [SIGINT, SIGUSR1];
+pcntl_sigprocmask(SIG_BLOCK, $sigset);
+
+for ($i = 0; $i < 10000; $i++) {
+    // 必须要有该方法
+    pcntl_signal_dispatch();
+
+    sleep(1);
+    echo sprintf('休眠了 %d 秒' . PHP_EOL, $i + 1);
+
+    // 5 秒后解除信号屏蔽 $oldSet 会返回之前阻塞的信号集｜信号屏蔽字
+    if ($i === 4) {
+        pcntl_sigprocmask(SIG_UNBLOCK, [SIGINT, SIGUSR1], $oldSet);
+        print_r($oldSet);
+    }
+}
+```
+
+执行结果如下：  
+
+```sh
+[work@bogon www]$ php test.php
+进程启动了，pid：17379
+休眠了 1 秒
+^C休眠了 2 秒
+^C休眠了 3 秒
+^C休眠了 4 秒
+^C休眠了 5 秒
+Array
+(
+    [0] => 2
+    [1] => 10
+)
+进程 pid：17379，我收到了一个信号：2
+休眠了 6 秒
+```
+
+我们可以看到，从第 5 秒开始，进程才会对 SIGINT 信号进行处理。  
+
+### 使用 posix_kill 向进程发送信号
+
+下面我们开启一个父进程和两个子进程，这两个子进程为兄弟进程，分别通过父进程：  
+
+1. 向其中一个子进程每隔 2 秒发送 SIGINT 信号；
+2. 向进程组每隔 2 秒发送 SIGINT 信号；
+
+```php
+<?php
+
+echo sprintf('进程启动了，pid：%d' . PHP_EOL, posix_getpid());
+
+pcntl_signal(SIGINT, function($signo) {
+    echo sprintf('进程 pid：%d，我收到了一个信号：%d' . PHP_EOL, posix_getpid(), $signo);
+});
+
+// 子进程 pid 列表
+$childPidList = [];
+
+// fork 出一个子进程，称为子进程 1
+$pid = pcntl_fork();
+$childPidList[] = $pid;
+
+if ($pid > 0) {
+    // 再次 fork 出一个子进程，称为子进程 2
+    $pid = pcntl_fork();
+    $childPidList[] = $pid;
+
+    if ($pid > 0) {
+        while (1) {
+            // 1、向子进程 1 发送 SIGINT 信号
+            // posix_kill($childPidList[0],SIGINT);
+
+            // 2、pid=0 就会向进程组中的每个进程发送信号
+            posix_kill(0, SIGINT);
+            sleep(2);
+        }
+    }
+}
 
 
+// 这里是子进程的运行代码
+while (1) {
+    // 必须要有该方法
+    pcntl_signal_dispatch();
+    echo sprintf('子进程 pid：%d ppid：%d gid：%d' . PHP_EOL, posix_getpid(), posix_getppid(), posix_getgid());
+    sleep(1);
+}
+```
+
+其中情况 1 的执行结果：  
+
+```sh
+[work@bogon www]$ php test.php
+进程启动了，pid：18947
+子进程 pid：18949 ppid：18947 gid：1000
+进程 pid：18948，我收到了一个信号：2
+子进程 pid：18948 ppid：18947 gid：1000
+子进程 pid：18949 ppid：18947 gid：1000
+子进程 pid：18948 ppid：18947 gid：1000
+进程 pid：18948，我收到了一个信号：2
+子进程 pid：18948 ppid：18947 gid：1000
+子进程 pid：18949 ppid：18947 gid：1000
+子进程 pid：18948 ppid：18947 gid：1000
+子进程 pid：18949 ppid：18947 gid：1000
+进程 pid：18948，我收到了一个信号：2
+```
+
+情况 2 的执行结果：  
+
+```sh
+[work@bogon www]$ php test.php
+进程启动了，pid：18998
+进程 pid：18999，我收到了一个信号：2
+子进程 pid：18999 ppid：18998 gid：1000
+进程 pid：19000，我收到了一个信号：2
+子进程 pid：19000 ppid：18998 gid：1000
+子进程 pid：18999 ppid：18998 gid：1000
+子进程 pid：19000 ppid：18998 gid：1000
+进程 pid：18999，我收到了一个信号：2
+子进程 pid：18999 ppid：18998 gid：1000
+进程 pid：19000，我收到了一个信号：2
+```
+
+### 使用 pcntl_alarm 向进程发送 SIGALRM 信号
+
+比如 2 秒后发送一个 SIGALRM 信号：  
+
+```php
+<?php
+
+echo sprintf('进程启动了，pid：%d' . PHP_EOL, posix_getpid());
+
+pcntl_signal(SIGALRM, function($signo) {
+    echo sprintf('进程 pid：%d，我收到了一个信号：%d' . PHP_EOL, posix_getpid(), $signo);
+});
+
+// 2 秒后会发送 SIGALRM 信号
+pcntl_alarm(2);
+
+while (1) {
+    // 必须要有该方法
+    pcntl_signal_dispatch();
+    echo sprintf('进程 pid：%d 正在执行' . PHP_EOL, posix_getpid());
+    sleep(1);
+}
+```
+
+执行结果如下：  
+
+```sh
+[work@bogon www]$ php test.php
+进程启动了，pid：19120
+进程 pid：19120 正在执行
+进程 pid：19120 正在执行
+进程 pid：19120，我收到了一个信号：14
+进程 pid：19120 正在执行
+```
+
+上面的 `pcntl_alarm(2)` 只会发送一次 SIGALRM 信号，我们可以改成每隔 2 秒都发送一次 SIGALRM 信号：  
+
+```php
+<?php
+
+echo sprintf('进程启动了，pid：%d' . PHP_EOL, posix_getpid());
+
+pcntl_signal(SIGALRM, function($signo) {
+    echo sprintf('进程 pid：%d，我收到了一个信号：%d' . PHP_EOL, posix_getpid(), $signo);
+    pcntl_alarm(2);
+});
+
+pcntl_alarm(2);
+
+while (1) {
+    // 必须要有该方法
+    pcntl_signal_dispatch();
+    echo sprintf('进程 pid：%d 正在执行' . PHP_EOL, posix_getpid());
+    sleep(1);
+}
+```
+
+其中 `pcntl_alarm(0)` 会清理掉设置的定时。  
+
+
+
+
+
+执行结果如下：
+
+```sh
+[work@bogon www]$ php test.php
+进程启动了，pid：19157
+进程 pid：19157 正在执行
+进程 pid：19157 正在执行
+进程 pid：19157，我收到了一个信号：14
+进程 pid：19157 正在执行
+进程 pid：19157 正在执行
+进程 pid：19157，我收到了一个信号：14
+```
+
+### 如何捕获子进程的退出信号
+
+主要是信号：**SIGCHLD**。  
+
+下面我们通过父进程捕捉到子进程的退出信号：  
+
+```php
+<?php
+
+echo sprintf('进程启动了，pid：%d' . PHP_EOL, posix_getpid());
+
+pcntl_signal(SIGCHLD, function($signo) {
+    echo sprintf('进程 pid：%d，我收到了一个信号：%d' . PHP_EOL, posix_getpid(), $signo);
+    $pid = pcntl_waitpid(-1, $status, WNOHANG | WUNTRACED);
+    if ($pid > 0) {
+        echo sprintf('我是父进程，我捕捉到子进程 pid：%d 退出了' . PHP_EOL, $pid, $signo);
+    }
+});
+
+$pid = pcntl_fork();
+
+// 父进程
+if ($pid > 0) {
+    while (1){
+        // 必须要有该方法
+        pcntl_signal_dispatch();
+        echo sprintf('父进程 pid：%d 正在执行' . PHP_EOL, posix_getpid());
+        sleep(1);
+
+    }
+}
+// 子进程
+else {
+    echo sprintf('子进程 pid：%d 即将退出' . PHP_EOL, posix_getpid());
+    exit(10);
+}
+```
+
+执行结果如下：  
+
+```sh
+[work@bogon www]$ php test.php
+进程启动了，pid：19417
+父进程 pid：19417 正在执行
+子进程 pid：19418 即将退出
+进程 pid：19417，我收到了一个信号：17
+我是父进程，我捕捉到子进程 pid：19418 退出了
+```
 
