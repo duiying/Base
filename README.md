@@ -15,3 +15,5 @@ Linux 命令手册：[Linux 命令手册](http://linux.51yip.com/)。
 - [Linux 特权进程及进程提权](Linux特权进程及进程提权.md)
 - [Linux 信号机制](Linux信号机制.md)
 - [如何编写守护进程](如何编写守护进程.md)
+- 进程间通信
+  - [管道](管道.md)
