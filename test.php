@@ -1,24 +1,11 @@
 <?php
 
-echo sprintf('进程启动了，pid：%d' . PHP_EOL, posix_getpid());
+// ftok：Convert a pathname and a project identifier to a System V IPC key（把一个路径和标识符转换成 IPC 的 key）
+$key = ftok(__FILE__, 'a');
+// msg_get_queue：Create or attach to a message queue（根据传入的键创建或返回一个消息队列的引用）
+$queue = msg_get_queue($key);
 
-$pipe = '/home/work/test.pipe';
+// 往消息队列发送一条消息
+msg_send($queue, 2, 'hello');
 
-if (!file_exists($pipe)) {
-    // posix_mkfifo 用于创建一个命名管道
-    if (!posix_mkfifo($pipe, 0666)) {
-        exit('创建命名管道失败' . PHP_EOL);
-    }
-}
-
-$fd = fopen($pipe, 'w');
-// 将文件设置为非阻塞方式
-stream_set_blocking($fd, 0);
-while (1) {
-    // 接收标准输入的数据，然后写入管道
-    $data = fgets(STDIN, 128);
-    if ($data) {
-        $len = fwrite($fd, $data, strlen($data));
-        echo sprintf('写入了 %d 个字节数据' . PHP_EOL, $len);
-    }
-}
+echo '消息队列发送成功' . PHP_EOL;
