@@ -30,7 +30,7 @@ int socket(int domain, int type, int protocol);
 
 **1、针对 TCP 协议通信的 socket 编程模型**  
 
-<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/TCP通信.png" width="800"></div>  
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/TCP通信.png" width="600"></div>  
 
 - 服务端和客户端初始化 socket，得到文件描述符；
 - 服务端调用 bind，将绑定在 IP 地址和端口;
@@ -49,7 +49,7 @@ int socket(int domain, int type, int protocol);
 
 **2、针对 UDP 协议通信的 socket 编程模型**  
 
-<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/UDP通信.png" width="600"></div>
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/UDP通信.png" width="300"></div>
 
 UDP 是没有连接的，所以不需要三次握手，也就不需要像 TCP 调用 listen 和 connect，但是 UDP 的交互仍然需要 IP 地址和端口号，因此也需要 bind。  
 
