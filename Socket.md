@@ -28,7 +28,7 @@ int socket(int domain, int type, int protocol);
 
 **接下来，简单说一下这三种通信的编程模式。**  
 
-**1、针对 TCP 协议通信的 socket 编程模型**  
+### 1、针对 TCP 协议通信的 socket 编程模型
 
 <div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/TCP通信.png" width="600"></div>  
 
@@ -47,7 +47,7 @@ int socket(int domain, int type, int protocol);
 
 成功连接建立之后，双方开始通过 read 和 write 函数来读写数据，就像往一个文件流里面写东西一样。  
 
-**2、针对 UDP 协议通信的 socket 编程模型**  
+### 2、针对 UDP 协议通信的 socket 编程模型
 
 <div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/UDP通信.png" width="300"></div>
 
@@ -57,7 +57,7 @@ UDP 是没有连接的，所以不需要三次握手，也就不需要像 TCP �
 
 另外，每次通信时，调用 sendto 和 recvfrom，都要传入目标主机的 IP 地址和端口。  
 
-**3、针对本地进程间通信的 socket 编程模型**  
+### 3、针对本地进程间通信的 socket 编程模型
 
 本地 socket 被用于在**同一台主机上进程间通信**的场景：  
 
@@ -70,7 +70,71 @@ UDP 是没有连接的，所以不需要三次握手，也就不需要像 TCP �
 
 本地字节流 socket 和 本地数据报 socket 在 bind 的时候，不像 TCP 和 UDP 要绑定 IP 地址和端口，而是**绑定一个本地文件**，这也就是它们之间的最大区别。
 
+### PHP 实践
 
+PHP 关于 socket 通信封装了 `stream`、`socket` 两个系列的函数，它们底层的系统调用差不多。  
+
+**1、小试牛刀，通过父进程向子进程发送数据**  
+
+```php
+<?php
+
+// 创建一对网络套接字
+$sockets = stream_socket_pair(AF_UNIX, SOCK_STREAM, 0);
+
+$readFd     = $sockets[0];  // 读 socket
+$writeFd    = $sockets[1];  // 写 socket
+
+$pid = pcntl_fork();
+
+// 子进程从 socket 中读取数据
+if ($pid === 0) {
+    while (1) {
+        $data = fread($readFd, 128);
+        if ($data) {
+            echo sprintf('子进程从 socket 中读取到了数据：%s' . PHP_EOL, $data);
+        }
+        // 当收到 exit 时，退出循环
+        if (trim($data) === 'exit') {
+            break;
+        }
+    }
+    exit;
+}
+
+// 父进程获取终端的输入，然后往 socket 中写入数据
+while (1) {
+    $data = fread(STDIN, 128);
+    if ($data) {
+        fwrite($writeFd, $data, strlen($data));
+    }
+    // 当收到 exit 时，退出循环
+    if (trim($data) === 'exit') {
+        break;
+    }
+}
+
+$pid = pcntl_wait($status);
+if ($pid > 0) {
+    echo "子进程 pid：$pid 退出了" . PHP_EOL;
+}
+```
+
+执行结果如下：  
+
+```bash
+[work@bogon www]$ php test.php
+hello
+子进程从 socket 中读取到了数据：hello
+
+world
+子进程从 socket 中读取到了数据：world
+
+exit
+子进程从 socket 中读取到了数据：exit
+
+子进程 pid：2604 退出了
+```
 
 
 
