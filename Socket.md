@@ -70,11 +70,11 @@ UDP 是没有连接的，所以不需要三次握手，也就不需要像 TCP �
 
 本地字节流 socket 和 本地数据报 socket 在 bind 的时候，不像 TCP 和 UDP 要绑定 IP 地址和端口，而是**绑定一个本地文件**，这也就是它们之间的最大区别。
 
-### PHP 实践
+### 通过 PHP 实践本地进程间 socket 通信
 
 PHP 关于 socket 通信封装了 `stream`、`socket` 两个系列的函数，它们底层的系统调用差不多。  
 
-**1、小试牛刀，通过父进程向子进程发送数据**  
+**1、小试牛刀，通过父进程写入 socket，子进程读取 socket**  
 
 ```php
 <?php
@@ -136,5 +136,131 @@ exit
 子进程 pid：2604 退出了
 ```
 
+**2、本地字节流 socket**  
 
+`server.php`：  
+
+```php
+<?php
+
+/**
+ * 服务端
+ * 读取客户端的数据并写回客户端
+ */
+
+$file = '/home/work/www/unix_file';
+if (file_exists($file)) {
+    unlink($file);
+}
+$socket = socket_create(AF_UNIX, SOCK_STREAM, 0);
+socket_bind($socket, $file);
+socket_listen($socket, 5);
+
+$connectSocket = socket_accept($socket);
+
+if ($connectSocket) {
+    while (1) {
+        $data = socket_read($connectSocket,1024);
+        if ($data) {
+            // 读取数据
+            echo sprintf('从 client 获取到了数据：%s' . PHP_EOL, $data);
+            // 写入数据
+            socket_write($connectSocket, $data, strlen($data));
+        }
+        // 当收到 exit 时，退出循环
+        if (trim($data) === 'exit') {
+            break;
+        }
+    }
+}
+
+socket_close($socket);
+socket_close($connectSocket);
+```
+
+`client.php`：  
+
+```php
+<?php
+
+/**
+ * 客户端
+ * 启动了两个进程：一个父进程，一个子进程
+ * 父进程读取终端输入，并发送给服务端
+ * 子进程读取服务端返回并打印
+ */
+
+$file = '/home/work/www/unix_file';
+$socket = socket_create(AF_UNIX, SOCK_STREAM, 0);
+if (socket_connect($socket, $file)) {
+    echo '客户端连接成功' . PHP_EOL;
+
+    $pid = pcntl_fork();
+
+    // 子进程读取数据
+    if ($pid === 0) {
+        while (1) {
+            $len = socket_recv($socket, $data, 1024, 0);
+            if ($len) {
+                echo sprintf('从 server 获取到了数据：%s' . PHP_EOL, $data);
+            }
+            // 当收到 exit 时，退出循环
+            if (trim($data) === 'exit') {
+                break;
+            }
+
+        }
+        exit;
+    }
+
+    // 父进程写入数据
+    while (1) {
+        $data = fread(STDIN, 128);
+        if ($data) {
+            socket_send($socket, $data, strlen($data), 0);
+        }
+        // 当收到 exit 时，退出循环
+        if (trim($data) === 'exit') {
+            break;
+        }
+    }
+}
+
+$pid = pcntl_wait($status);
+if ($pid > 0) {
+    echo "子进程 pid：$pid 退出了" . PHP_EOL;
+}
+```
+
+执行结果如下：  
+
+先启动 server：  
+
+```sh
+[work@bogon www]$ php server.php
+从 client 获取到了数据：hello
+
+从 client 获取到了数据：world
+
+从 client 获取到了数据：exit
+```
+
+再启动 client：
+
+```sh
+[work@bogon www]$ php client.php
+客户端连接成功
+hello
+从 server 获取到了数据：hello
+
+world
+从 server 获取到了数据：world
+
+exit
+从 server 获取到了数据：exit
+
+子进程 pid：3768 退出了
+```
+
+**3、本地数据报 socket**  
 
