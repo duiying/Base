@@ -122,7 +122,7 @@ if ($pid > 0) {
 
 执行结果如下：  
 
-```bash
+```sh
 [work@bogon www]$ php test.php
 hello
 子进程从 socket 中读取到了数据：hello
