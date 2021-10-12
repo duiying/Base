@@ -1,45 +1,29 @@
 <?php
 
-// 创建一对网络套接字
-$sockets = stream_socket_pair(AF_UNIX, SOCK_STREAM, 0);
+/**
+ * 服务端
+ * 读取客户端的数据并写回客户端
+ */
 
-$readFd     = $sockets[0];  // 读 socket
-$writeFd    = $sockets[1];  // 写 socket
-
-$pid = pcntl_fork();
-
-// 子进程从 socket 中读取数据
-if ($pid === 0) {
-    while (1) {
-        $data = fread($readFd, 128);
-        if ($data) {
-            echo sprintf('子进程收到了数据：%s' . PHP_EOL, $data);
-        }
-        if (trim($data) === 'exit') {
-            break;
-        }
-    }
-    exit;
+$file = '/home/work/www/unix_udp_server_file';
+if (file_exists($file)) {
+    unlink($file);
 }
+$socket = socket_create(AF_UNIX, SOCK_DGRAM, 0);
+socket_bind($socket, $file);
 
-// 父进程获取终端的输入，然后往 socket 中写入数据
 while (1) {
-    $data = fread(STDIN, 128);
-    if ($data) {
-        fwrite($writeFd, $data, strlen($data));
+    $len = socket_recvfrom($socket,$buf, 1024, 0, $unixClientFile);
+    if ($len) {
+        // 读取数据
+        echo sprintf('从 client 获取到了数据：%s 文件：%s' . PHP_EOL, $buf, $unixClientFile);
+        // 写入数据
+        socket_sendto($socket, $buf, strlen($buf), 0, $unixClientFile);
     }
-    if (trim($data) === 'exit') {
+    // 当收到 exit 时，退出循环
+    if (trim($buf) === 'exit') {
         break;
     }
 }
 
-$pid = pcntl_wait($status);
-if ($pid > 0) {
-    echo "子进程 pid：$pid 退出了" . PHP_EOL;
-}
-
-
-
-
-
-
+socket_close($socket);

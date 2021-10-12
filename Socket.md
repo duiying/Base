@@ -264,3 +264,127 @@ exit
 
 **3、本地数据报 socket**  
 
+和本地字节流 socket 差不多，一个 server，一个 client。  
+
+`server.php`：  
+
+```php
+<?php
+
+/**
+ * 服务端
+ * 读取客户端的数据并写回客户端
+ */
+
+$file = '/home/work/www/unix_udp_server_file';
+if (file_exists($file)) {
+    unlink($file);
+}
+$socket = socket_create(AF_UNIX, SOCK_DGRAM, 0);
+socket_bind($socket, $file);
+
+while (1) {
+    $len = socket_recvfrom($socket,$buf, 1024, 0, $unixClientFile);
+    if ($len) {
+        // 读取数据
+        echo sprintf('从 client 获取到了数据：%s 文件：%s' . PHP_EOL, $buf, $unixClientFile);
+        // 写入数据
+        socket_sendto($socket, $buf, strlen($buf), 0, $unixClientFile);
+    }
+    // 当收到 exit 时，退出循环
+    if (trim($buf) === 'exit') {
+        break;
+    }
+}
+
+socket_close($socket);
+```
+
+`client.php`：  
+
+```php
+<?php
+
+/**
+ * 客户端
+ * 启动了两个进程：一个父进程，一个子进程
+ * 父进程读取终端输入，并发送给服务端
+ * 子进程读取服务端返回并打印
+ */
+
+$file = '/home/work/www/unix_udp_client_file';
+$serverFile = '/home/work/www/unix_udp_server_file';
+if (file_exists($file)) {
+    unlink($file);
+}
+$socket = socket_create(AF_UNIX, SOCK_DGRAM, 0);
+socket_bind($socket, $file);
+
+$pid = pcntl_fork();
+
+// 子进程读取数据
+if ($pid === 0) {
+    while (1) {
+        $len = socket_recvfrom($socket, $buf, 1024, 0, $unixClientFile);
+        if ($len) {
+            echo sprintf('从 server 获取到了数据：%s 文件：%s' . PHP_EOL, $buf, $unixClientFile);
+        }
+        // 当收到 exit 时，退出循环
+        if (trim($buf) === 'exit') {
+            break;
+        }
+
+    }
+    exit;
+}
+
+// 父进程写入数据
+while (1) {
+    $data = fread(STDIN, 128);
+    if ($data) {
+        socket_sendto($socket, $data, strlen($data), 0, $serverFile);
+    }
+    // 当收到 exit 时，退出循环
+    if (trim($data) === 'exit') {
+        break;
+    }
+}
+
+$pid = pcntl_wait($status);
+if ($pid > 0) {
+    echo "子进程 pid：$pid 退出了" . PHP_EOL;
+}
+socket_close($socket);
+```
+
+执行结果如下：  
+
+先启动 server：
+
+```sh
+[work@bogon www]$ php server.php
+从 client 获取到了数据：hello
+ 文件：/home/work/www/unix_udp_client_file
+从 client 获取到了数据：world
+ 文件：/home/work/www/unix_udp_client_file
+从 client 获取到了数据：exit
+ 文件：/home/work/www/unix_udp_client_file
+```
+
+再启动 client：
+
+```sh
+[work@bogon www]$ php client.php
+hello
+从 server 获取到了数据：hello
+ 文件：/home/work/www/unix_udp_server_file
+world
+从 server 获取到了数据：world
+ 文件：/home/work/www/unix_udp_server_file
+exit
+从 server 获取到了数据：exit
+ 文件：/home/work/www/unix_udp_server_file
+子进程 pid：4287 退出了
+```
+
+
