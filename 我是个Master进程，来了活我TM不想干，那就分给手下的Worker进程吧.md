@@ -264,7 +264,7 @@ socket_close($socket);
 
 执行结果如下：  
 
-> 先启动 server，再执行 4 次 client.php
+> 先启动 server，再执行 4 次 client
 
 ```sh
 [work@bogon www]$ php client.php
