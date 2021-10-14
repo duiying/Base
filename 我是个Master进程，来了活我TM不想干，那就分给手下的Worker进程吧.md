@@ -300,3 +300,11 @@ Worker 进程退出了，pid：4497
 Worker 进程退出了，pid：4498
 Master 进程结束执行了，pid：4495
 ```
+
+如果你想做的更完善一些，比如：  
+
+- Worker 进程的健康检查
+- reload
+- daemonize
+
+可以参考：https://juejin.cn/post/6844903714994520072
