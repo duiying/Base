@@ -333,6 +333,22 @@ work       4762   4243  0 17:24 ?        00:00:00 nginx: worker process
 4762  epoll_wait(10,  <detached ...>
 ```
 
+除了代理 HTTP 服务外，Nginx 还可以代理 gRPC、FastCGI 等协议的服务。  
+
+- HTTP：https://nginx.org/en/docs/http/ngx_http_proxy_module.html
+- gRPC：https://nginx.org/en/docs/http/ngx_http_grpc_module.html
+- FastCGI：https://nginx.org/en/docs/http/ngx_http_fastcgi_module.html
+
+### 4、使用 Go 实现一个静态服务
+
+```go
+
+```
+
+### 5、使用 Python 实现一个静态服务
+
+
+
 
 
 
