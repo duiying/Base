@@ -50,7 +50,10 @@ http {
 文档中说明了：  
 
 1. 如何 stop、quit、reload。
-2. reload 的过程：1、Master 检查配置文件语法；2、启动新的 Worker 进程并关闭旧的 Worker 进程；3、旧的 Worker 进程停止接受新的连接并继续为当前请求提供服务，直到所有当前请求都结束，然后旧的 Worker 进程退出；
+2. reload 的过程：
+   - Master 检查配置文件语法；
+   - 启动新的 Worker 进程并关闭旧的 Worker 进程；
+   - 旧的 Worker 进程停止接受新的连接并继续为当前请求提供服务，直到所有当前请求都结束，然后旧的 Worker 进程退出；
 
 我们首先启动 Nginx 服务：  
 
@@ -63,7 +66,7 @@ work       3104   3103  0 15:30 ?        00:00:00 nginx: worker process
 
 可以看到，启动了一个 Master 进程（3103）和一个 Worker 进程（3104），此时 Nginx 服务正常运行。  
 
-<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/Nginx提供服务.png" width="800"></div>  
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/Nginx提供服务.png" width="500"></div>  
 
 
 
