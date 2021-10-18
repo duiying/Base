@@ -4,7 +4,12 @@ Nginx 文档：https://nginx.org/en/docs/beginners_guide.html
 
 ### 目录
 
-- []()
+- 1、Nginx 安装
+- 2、Nginx stop、quit、reload 原理
+- 3、Nginx 提供静态服务的原理
+- 4、Nginx 提供反向代理服务的原理
+- 5、使用 Go 实现一个静态服务
+- 6、总结
 
 ### 1、Nginx 安装
 
@@ -150,7 +155,7 @@ pread64(8, "worker_processes  1;\n\nevents {\n    worker_connections  1024;\n}\n
 ...
 ``` 
 
-### 2、Nginx 提供静态服务的原理
+### 3、Nginx 提供静态服务的原理
 
 查看目前的进程信息：  
 
@@ -224,7 +229,7 @@ Commercial support is available at
 4268  epoll_wait(10,  <detached ...>
 ```
 
-### 3、Nginx 提供反向代理服务的原理
+### 4、Nginx 提供反向代理服务的原理
 
 目前机器上有一个 Swoole 启动的 HTTP 服务：  
 
@@ -343,7 +348,7 @@ work       4762   4243  0 17:24 ?        00:00:00 nginx: worker process
 - gRPC：https://nginx.org/en/docs/http/ngx_http_grpc_module.html
 - FastCGI：https://nginx.org/en/docs/http/ngx_http_fastcgi_module.html
 
-### 4、使用 Go 实现一个静态服务
+### 5、使用 Go 实现一个静态服务
 
 ```go
 package main
@@ -457,7 +462,7 @@ static server
 
 <div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/go的socket系统调用.png" width="1200"></div>  
 
-### 总结
+### 6、总结
 
 <div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/底层原理分析.png" width="600"></div>  
 
