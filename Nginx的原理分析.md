@@ -80,7 +80,7 @@ work       3104   3103  0 15:30 ?        00:00:00 nginx: worker process
 
 查看 `stop.log`：  
 
-<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/stop的系统调用.png" width="1200"></div>  
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/stop的系统调用.png" width="1500"></div>  
 
 
 
