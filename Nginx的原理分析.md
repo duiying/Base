@@ -455,10 +455,13 @@ static server
 </html>
 ```
 
-<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/go的socket系统调用.png" width="800"></div>  
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/go的socket系统调用.png" width="1200"></div>  
 
-### 5、使用 Python 实现一个静态服务
+### 总结
 
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/底层原理分析.png" width="600"></div>  
+
+系统调用 syscall 是所有应用程序所依赖的底层接口，所有语言的底层接口都差不多，都是调用的 syscall。  
 
 
 
