@@ -80,7 +80,38 @@ work       3104   3103  0 15:30 ?        00:00:00 nginx: worker process
 
 查看 `stop.log`：  
 
-<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/stop的系统调用.png" width="1500"></div>  
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/stop的系统调用.png" width="1200"></div>  
+
+其中，`nginx -s reload` 等同于 `kill -s SIGTERM 3103`、`kill -n 15 3103`。  
+
+**同理，我们再来观察 quit 时的系统调用**：  
+
+启动 Nginx：  
+
+```sh
+[root@bogon work]# /home/work/service/nginx/sbin/nginx -c /home/work/service/nginx/conf/nginx.conf
+[root@bogon work]# ps -ef | grep nginx | grep -v grep
+root       4119      1  0 16:46 ?        00:00:00 nginx: master process /home/work/service/nginx/sbin/nginx -c /home/work/service/nginx/conf/nginx.conf
+work       4120   4119  0 16:46 ?        00:00:00 nginx: worker process
+```
+
+```sh
+# 跟踪 Master 进程的系统调用
+[root@bogon ~]# strace -f -s 65535 -o quit.log -p 4119
+# stop
+[root@bogon work]# /home/work/service/nginx/sbin/nginx -c /home/work/service/nginx/conf/nginx.conf -s quit
+[root@bogon work]# ps -ef | grep nginx | grep -v grep
+```
+
+查看 `quit.log`：
+
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/quit的系统调用.png" width="1200"></div>  
+
+其中，`nginx -s quit` 等同于 ` kill -s SIGQUIT 4119`、`kill -n 3 4119`。  
+
+
+
+
 
 
 
