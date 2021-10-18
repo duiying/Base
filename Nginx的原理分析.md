@@ -68,7 +68,17 @@ work       3104   3103  0 15:30 ?        00:00:00 nginx: worker process
 
 <div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/Nginx提供服务.png" width="500"></div>  
 
+**观察 stop 时的系统调用**：  
 
+```sh
+# 跟踪 Master 进程的系统调用
+[root@bogon ~]# strace -f -s 65535 -o stop.log -p 3103
+# stop
+[root@bogon work]# /home/work/service/nginx/sbin/nginx -c /home/work/service/nginx/conf/nginx.conf -s stop
+[root@bogon work]# ps -ef | grep nginx | grep -v grep
+```
+
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/stop的系统调用.png" width="800"></div>  
 
 
 
