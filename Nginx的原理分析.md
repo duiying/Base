@@ -2,6 +2,10 @@
 
 Nginx 文档：https://nginx.org/en/docs/beginners_guide.html
 
+### 目录
+
+- []()
+
 ### 1、Nginx 安装
 
 参考：[源码编译安装 Nginx、PHP8 以及 PHP 常见扩展](https://github.com/duiying/OPS/tree/master/nginx-php-source-install)。  
@@ -342,8 +346,116 @@ work       4762   4243  0 17:24 ?        00:00:00 nginx: worker process
 ### 4、使用 Go 实现一个静态服务
 
 ```go
+package main
 
+import (
+        "fmt"
+        "syscall"
+        "io/ioutil"
+)
+
+func main(){
+        // 创建 socket
+        fd,err:=syscall.Socket(syscall.AF_INET,syscall.SOCK_STREAM,0)
+        if err!=nil{
+                fmt.Println("socket 创建失败")
+                return
+        }
+
+        var address syscall.SockaddrInet4
+        address.Port=9511
+        address.Addr=[4]byte{0,0,0,0}
+        // 绑定
+        err = syscall.Bind(fd,&address)
+        if err!=nil{
+                fmt.Println("bind 失败")
+                return
+        }
+        // 监听
+        err = syscall.Listen(fd,1024)
+        if err!=nil{
+                fmt.Println("listen 失败")
+                return
+        }
+
+        connfd,clientAddr,err:=syscall.Accept(fd)
+        if err!=nil{
+                fmt.Println("accept 失败",err)
+        }
+
+        fmt.Println("客户端信息：",clientAddr)
+
+        // 接收客户端的数据
+        var msg [1024]byte
+        data:=msg[:]
+        nReadBytes,err:=syscall.Read(connfd,data)
+        if err!=nil{
+                fmt.Println("read 失败",err)
+        }
+
+        fmt.Println(nReadBytes,string(data))
+
+        // 读取文件的内容并封装为 HTTP 报文，同时响应给客户端，然后关闭客户端的连接
+        content,err:=ioutil.ReadFile("./index.html")
+        if err!=nil{
+                fmt.Printf("read error")
+        }
+        var resp string
+        resp = fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: %d\r\n\r\n%v",len(string(content)),string(content))
+
+        nWriteByte,err:=syscall.Write(connfd,[]byte(resp))
+        if err!=nil{
+                fmt.Println("write 失败",err)
+        }
+
+        fmt.Printf("write %d bytes\r\n",nWriteByte)
+        syscall.Close(connfd)
+}
 ```
+
+准备一个 HTML 静态文件 `index.html`：  
+
+```html
+<html>
+<head>
+</head>
+<body>
+static server
+</body>
+</html>
+```
+
+编译，启动，查看系统调用：  
+
+```sh
+[root@bogon ~]# go build static_server.go
+[root@bogon ~]# echo $$
+3058
+[root@bogon ~]# ./static_server
+客户端信息： &{54952 [127 0 0 1] {0 0 [0 0 0 0] [0 0 0 0 0 0 0 0]}}
+78 GET / HTTP/1.1
+User-Agent: curl/7.29.0
+Host: 127.0.0.1:9511
+Accept: */*
+
+
+write 123 bytes
+```
+
+发起一个 HTTP 请求，查看系统调用：  
+
+```sh
+[root@bogon ~]# curl 127.0.0.1:9511
+<html>
+<head>
+</head>
+<body>
+static server
+</body>
+</html>
+```
+
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/go的socket系统调用.png" width="800"></div>  
 
 ### 5、使用 Python 实现一个静态服务
 
