@@ -78,6 +78,8 @@ work       3104   3103  0 15:30 ?        00:00:00 nginx: worker process
 [root@bogon work]# ps -ef | grep nginx | grep -v grep
 ```
 
+查看 `stop.log`：  
+
 <div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/stop的系统调用.png" width="1200"></div>  
 
 
