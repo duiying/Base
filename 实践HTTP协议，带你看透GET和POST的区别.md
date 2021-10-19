@@ -6,7 +6,7 @@
 
 关于这个问题，有下面几个回答。  
 
-**1、GET 传递的参数暴露在 URL 中，安全性较低，POST 通过请求体传递参数，安全性较高。**  
+**1、GET 传递的参数暴露在 URL 中，安全性较低；POST 通过请求体传递参数，安全性较高。**  
 
 我们先不说对错，用实践来验证。  
 
@@ -70,6 +70,14 @@ function httpResponse($content = '')
 <div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/浏览器发起请求.png" width="500"></div>  
 
 <div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/服务端收到的浏览器请求报文.png" width="1000"></div>  
+
+可以看到，Server 端收到的 HTTP 请求报文中，参数 `param1=val1` 被放到了请求头中，那么我们可不可以将请求参数 `param1=val1` 放到 GET 请求的请求体中呢？  
+
+（2）我们用另外的一个 HTTP 客户端工具 `curl`，来发起 GET 的 HTTP 请求。  
+
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/curl发送请求.png" width="500"></div>  
+
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/服务端收到curl请求报文.png" width="1000"></div>  
 
 
 
