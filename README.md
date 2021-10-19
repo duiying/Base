@@ -22,3 +22,4 @@
 - [如何编写守护进程](如何编写守护进程.md)
 - [我是个 Master 进程，来了活我 TM 不想干，那就分给手下的 Worker 进程吧](我是个Master进程，来了活我TM不想干，那就分给手下的Worker进程吧.md)
 - [Nginx 的原理分析](Nginx的原理分析.md)
+- [实践 HTTP 协议，带你看透 GET 和 POST 的区别](实践HTTP协议，带你看透GET和POST的区别.md)
