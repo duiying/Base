@@ -85,7 +85,7 @@ function httpResponse($content = '')
 
 关于 GET 和 POST 的安全性：HTTP 本身是明文协议，就算数据在请求体里，也是可以被记录下来的，因此如果请求要经过不信任的公网，避免泄密的**唯一手段**就是 HTTPS。（但是，在浏览器中的登录场景来看，还是不要使用 GET 提交，因为这样会在浏览器的 url 中将密码暴露）  
 
-**2、GET 请求只能进行 url 编码，而 POST 请求支持多种编码方式。**  
+**2、GET 请求只能支持 ASCII 编码，而 POST 请求支持多种编码方式。**  
 
 说法错误，比如用 `Postman` 工具：  
 
@@ -119,7 +119,11 @@ var_dump($response);
 <div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/自定义HTTP之请求.png" width="500"></div>  
 <div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/自定义HTTP之响应.png" width="500"></div>  
 
-我们把 `GET` 换成了 `DuiYing`，只是这样不太符合**规范**而已。  
+我们把 `GET` 换成了 `DuiYing`，只是这样不太符合**规范**而已，协议都是人定的，只要客户端和服务器能彼此认同，就能**工作**。  
+
+**总结**  
+
+总结全文就是，GET 和 POST 没什么区别，唯一的区别就是二者的**语义不同**，从语义方面来看，GET 用于获取数据，POST 用于提交数据。  
 
 
 
