@@ -1,6 +1,6 @@
 # 实践 HTTP 协议，带你看透 GET 和 POST 的区别
 
-### 前言
+**前言**  
 
 来看一道经典的面试题：**GET 和 POST 的区别是什么？**  
 
@@ -89,7 +89,40 @@ function httpResponse($content = '')
 
 说法错误，比如用 `Postman` 工具：  
 
-<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/GET请求的编码.png" width="1000"></div>
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/GET请求的编码.png" width="1000"></div>  
+
+选择 `binary`，GET 请求也可以传输二进制格式的文件。  
+
+**我不想用 GET 或者 POST，我想自己定义一个请求方式，怎么做？**  
+
+`client.php`：  
+
+```php
+<?php
+
+$socket = stream_socket_client('tcp://127.0.0.1:9551');
+$msg = "DuiYing / HTTP/1.1
+Host: 127.0.0.1:9551
+User-Agent: curl/7.64.1
+Accept: */*
+Content-Length: 11
+Content-Type: application/x-www-form-urlencoded
+
+param1=val1";
+fwrite($socket, $msg, strlen($msg));
+$response = fread($socket, 8092);
+var_dump($response);
+```
+
+执行结果：  
+
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/自定义HTTP之请求.png" width="500"></div>  
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/自定义HTTP之响应.png" width="500"></div>  
+
+我们把 `GET` 换成了 `DuiYing`，只是这样不太符合**规范**而已。  
+
+
+
 
 
 
