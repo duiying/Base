@@ -77,7 +77,7 @@ function httpResponse($content = '')
 
 <div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/curl发送请求.png" width="500"></div>  
 
-<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/服务端收到curl请求报文.png" width="1000"></div>  
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/服务端收到curl请求报文.png" width="600"></div>  
 
 
 
