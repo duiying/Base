@@ -106,7 +106,7 @@ sleep(60);
 
 我们代码所调用的 get 函数，其实是 PHP 的一个 Redis 扩展提供的。该扩展又会去调用 Linux 系统的网络库函数，库函数再去调用内核提供的系统调用。这个调用层次模型如下：  
 
-<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/redis系统调用.png" width="600"></div>  
+<div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/redis系统调用.png" width="400"></div>  
 
 **3、进程上下文切换开销**  
 
@@ -124,6 +124,8 @@ nonvoluntary_ctxt_switches:	1
 ```
 
 每次 get 都会导致进程进入**自愿上下文切换**，在网络 IO 密集型的应用里**自愿上下文切换**要比**时间片到了被动切换**要多的多！  
+
+> 一般来说计算密集型的进程会有较多的非自愿上下文切换（nonvoluntary context switch），而 IO 密集型的进程会有较多的自愿上下文切换（voluntary context switch）
 
 **4、软中断开销**  
 
