@@ -79,7 +79,9 @@ function httpResponse($content = '')
 
 <div align=center><img src="https://raw.githubusercontent.com/duiying/img/master/服务端收到curl请求报文.png" width="600"></div>  
 
+可以看到，Server 端收到的 HTTP 请求报文中，参数 `param1=val1` 被放到了请求体中。  
 
+因此，这个结论 `1、GET 传递的参数暴露在 URL 中，安全性较低；POST 通过请求体传递参数，安全性较高。`是错误的，可能**部分浏览器在封装 HTTP 时，将 GET 传递的参数放在了请求行中，但这并不代表 GET 传递的参数是必须放在请求行中的，GET 传递的参数也可以放在请求体中**。
 
 
 
