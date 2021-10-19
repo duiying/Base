@@ -18,7 +18,7 @@ OK
 
 $redis = new \Redis();
 $redis->connect('115.159.111.225', 6397);
-$redis->auth('WYX*wyx123');
+$redis->auth('your_redis_password');
 echo '开始测试，pid：' . posix_getpid() . PHP_EOL;
 sleep(60);
 for ($i = 0; $i < 2000; $i++) {
