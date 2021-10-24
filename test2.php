@@ -1,14 +1,10 @@
 <?php
 
-$socket = stream_socket_client('tcp://127.0.0.1:4568');
-$msg = "DuiYing / HTTP/1.1
-Host: 127.0.0.1:9551
-User-Agent: curl/7.64.1
-Accept: */*
-Content-Length: 11
-Content-Type: application/x-www-form-urlencoded
+$client = socket_create(AF_INET, SOCK_STREAM, 0);
 
-param1=val1";
-fwrite($socket, $msg, strlen($msg));
-$response = fread($socket, 8092);
-var_dump($response);
+if (socket_connect($client, '115.159.101.225', 1234)) {
+    socket_write($client, 'ping', 4);
+    echo "从服务端收到了数据：" . socket_read($client, 1024) . PHP_EOL;
+}
+
+socket_close($client);
